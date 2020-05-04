@@ -1,0 +1,30 @@
+buildscript {
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.6.RELEASE")
+    }
+}
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.2.6.RELEASE'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+bootJar.enabled = true
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.examples.ServerApplication'
+    }
+}
+
+dependencies {
+    implementation 'net.devh:grpc-server-spring-boot-starter:2.7.0.RELEASE'
+    compile project(":interface-project")
+}
