@@ -20,8 +20,8 @@ package org.examples.config;
 import io.grpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
@@ -30,7 +30,7 @@ public class LogGrpcInterceptor implements ClientInterceptor {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static final Metadata.Key<String> TRACE_ID_KEY = Metadata.Key.of("traceId", ASCII_STRING_MARSHALLER);
+    public static final Metadata.Key<String> TRACE_ID_KEY = Metadata.Key.of("requestTraceId", ASCII_STRING_MARSHALLER);
 
     @Override
     public <M, R> ClientCall<M, R> interceptCall(final MethodDescriptor<M, R> method, CallOptions callOptions, Channel next) {
@@ -44,8 +44,7 @@ public class LogGrpcInterceptor implements ClientInterceptor {
 
             @Override
             public void start(Listener<R> responseListener, Metadata headers) {
-                // TODO: Use the sleuth traceId
-                headers.put(TRACE_ID_KEY, "traceId-" + new Date().getTime());
+                headers.put(TRACE_ID_KEY, MDC.get(TRACE_ID_KEY.originalName()));
 
                 BackendListener<R> backendListener = new BackendListener<>(methodName, responseListener);
                 super.start(backendListener, headers);

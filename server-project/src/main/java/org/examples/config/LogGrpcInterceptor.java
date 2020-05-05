@@ -20,6 +20,8 @@ package org.examples.config;
 import io.grpc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.util.StringUtils;
 
 import static io.grpc.Metadata.ASCII_STRING_MARSHALLER;
 
@@ -27,18 +29,16 @@ public class LogGrpcInterceptor implements ServerInterceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(LogGrpcInterceptor.class);
 
-    public static final Metadata.Key<String> TRACE_ID_KEY = Metadata.Key.of("traceId", ASCII_STRING_MARSHALLER);
+    public static final Metadata.Key<String> TRACE_ID_KEY = Metadata.Key.of("requestTraceId", ASCII_STRING_MARSHALLER);
 
     @Override
     public <M, R> ServerCall.Listener<M> interceptCall(ServerCall<M, R> call, Metadata headers, ServerCallHandler<M, R> next) {
 
-        String traceId = headers.get(TRACE_ID_KEY);
-
-        // TODO: Add traceId to sleuth
-        logger.warn("traceId from client: {}. TODO: Add traceId to sleuth", traceId);
+        if (headers.containsKey(TRACE_ID_KEY)) {
+            MDC.put(TRACE_ID_KEY.originalName(), headers.get(TRACE_ID_KEY));
+        }
 
         GrpcServerCall grpcServerCall = new GrpcServerCall(call);
-
         ServerCall.Listener listener = next.startCall(grpcServerCall, headers);
 
         return new GrpcForwardingServerCallListener<M>(call.getMethodDescriptor(), listener) {
